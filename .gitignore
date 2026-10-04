@@ -1,0 +1,42 @@
+# Gradle
+.gradle/
+build/
+**/build/
+out/
+
+# Kotlin / KMP
+*.class
+*.jar
+local.properties
+*.hprof
+
+# Android
+*.apk
+*.aab
+*.ap_
+*.dex
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.keystore
+!debug.keystore
+
+# iOS / Xcode
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM/
+Pods/
+Carthage/Build/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.DS_Store
+
+# Compose resources generated
+composeApp/build/
