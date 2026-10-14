@@ -1,5 +1,8 @@
 # 60-BLAST-RADIUS — titipo-app-kmp
 
+> Versi: v1.0.0 | Status: disetujui | Menggantikan: -
+> Acuan: [TitipO-TownHall platform/versions/v1.0.0](https://github.com/Coding-Skuy/TitipO-TownHall/tree/main/platform/versions/v1.0.0) (BRD/PRD/FRD/FSD/SRS beku 2026-10-07).
+
 ## Konsumen
 
 - Pengguna langsung: rumah tangga dan vendor TitipO (Android 8 ke atas, iOS 16 ke atas).
@@ -23,3 +26,21 @@
 
 - Dampak maksimal satu rilis aplikasi; tidak menyentuh DB titipo, DB Lumbung, pipeline, atau model AI.
 - Insiden auth massal dieskalasi ke pemilik JWKS Lumbung via TitipO-TownHall, bukan perbaikan token lokal.
+
+## Boleh disentuh
+
+UI Compose (5 layar rumah + 3 layar vendor), antrean offline lokal SQLDelight, cache katalog 50 MB, pratinjau hitungan, push dan kamera lewat `expect/actual`.
+
+## Dilarang
+
+Service key titipo-lumbung, akses DB titipo/Lumbung, hitungan uang sah, layar admin, framework UI selain Compose Multiplatform, target desktop.
+
+## Kontrak yang dikonsumsi
+
+API mobile `titipo-backend-service` (7 endpoint, FSD/30-kontrak.md); JWT beraudien `titipo` (JWKS Lumbung); token visual `titipo-design`.
+
+## Kontrak yang diproduksi
+
+Tidak ada kontrak keluar; aplikasi adalah ujung rantai. Modul `:shared:pantry-resep` (milik Pawonee) TIDAK dikonsumsi TitipO.
+
+Sumber batas: [townhall-roadmap.md §2](https://github.com/Coding-Skuy/ChefGenie-TownHall/blob/main/townhall-roadmap.md) baris TitipO (pesan <=20.00, serah 06.00-08.00; sinyal `pedaree.stok.v1` anjuran saja; fee vendor 12%) dan [KONTEKS-LINTAS-DIVISI.md](https://github.com/Coding-Skuy/ChefGenie-TownHall/blob/main/KONTEKS-LINTAS-DIVISI.md) §3, §8, §9.

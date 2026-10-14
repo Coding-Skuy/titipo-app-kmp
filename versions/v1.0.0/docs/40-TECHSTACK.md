@@ -1,8 +1,7 @@
 # 40-TECHSTACK — titipo-app-kmp
 
-STATUS: defined pending (target dikunci, implementasi menunggu).
-
-Mengacu: TitipO-TownHall v1.0.0
+> Versi: v1.0.0 | Status: disetujui | Menggantikan: -
+> Acuan: [TitipO-TownHall platform/versions/v1.0.0](https://github.com/Coding-Skuy/TitipO-TownHall/tree/main/platform/versions/v1.0.0) (BRD/PRD/FRD/FSD/SRS beku 2026-10-07).
 
 ## 1. Target stack
 
@@ -33,3 +32,33 @@ Rujukan pin: `gradle/libs.versions.toml`. Aturan bisnis yang dijaga klien: pesan
 - Hanya klien mobile; bukan backend Rust, bukan web Bun Svelte, bukan model AI, bukan pipeline.
 - Hitungan uang di klien hanya pratinjau; angka sah dari server.
 - Dilarang menaikkan atau menurunkan pin Kotlin 2.2.20, Compose 1.8.2, Navigation3 1.0.0 tanpa PR.
+
+## 3. Matriks fitur per platform
+
+| Fitur | Android 8+ | iOS 16+ | Desktop |
+|---|---|---|---|
+| Daftar vendor radius 5 km (lokasi) | ya | ya | tidak ada target |
+| Katalog tersinkron (stempel 24 jam) | ya | ya | - |
+| Keranjang dan checkout (wajib online) | ya | ya | - |
+| Bayar QRIS timer 15:00 | ya | ya | - |
+| Lacak pesanan + rating 1 sampai 5 | ya | ya | - |
+| Vendor: konfirmasi 2 ketukan (bisa luring, antre) | ya | ya | - |
+| Vendor: kamera foto serah (JPEG, antre luring) | ya | ya | - |
+| Push konfirmasi 30 menit | FCM | APNs | - |
+| Antrean offline SQLDelight | ya | ya | - |
+| Deep-link `titipo://lacak/{kode}` | ya | ya | - |
+
+Platform khusus lewat `expect/actual` di modul `platform/`: kamera, notifikasi, lokasi, penyimpanan. Rilis: Play Store, APK sideload, TestFlight. Unduh maksimal 35 MB, buka dingin maksimal 2,5 detik.
+
+## 4. Navigation graph ringkas
+
+```
+login (JWT audiens titipo) --klaim role--> GrafRumah | GrafVendor
+
+GrafRumah:  rumah/daftar-vendor -> rumah/katalog/{idVendor} -> rumah/keranjang
+            -> rumah/bayar (QRIS 15:00) -> rumah/lacak/{kode}
+GrafVendor: vendor/masuk (terima/tolak) -> vendor/kemas (checklist)
+            -> vendor/serah/{kode} (kamera, foto wajib)
+```
+
+Sumber: produk/10-ux-pesan-titip.md dan FSD/10-alur.md. Penambahan layar di luar 5 rumah dan 3 vendor butuh versi baru di TownHall.
