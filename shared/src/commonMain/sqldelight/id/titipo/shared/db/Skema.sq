@@ -132,3 +132,10 @@ SELECT * FROM foto_serah WHERE id_antrean = ?;
 
 tandaiFotoSinkron:
 UPDATE foto_serah SET sinkron = 1 WHERE id_antrean = ?;
+
+-- vendor: daftar titip hari ini (cermin lokal; belum ada endpoint daftar di kontrak)
+pesananMasukVendor:
+SELECT * FROM pesanan WHERE status IN ('menunggu_konfirmasi', 'disiapkan') ORDER BY dibuat_ms ASC;
+
+ubahStatusById:
+UPDATE pesanan SET status = ?, sinkron = ? WHERE kode = ?;

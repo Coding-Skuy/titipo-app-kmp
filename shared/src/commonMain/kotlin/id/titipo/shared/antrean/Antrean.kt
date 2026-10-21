@@ -1,12 +1,16 @@
 package id.titipo.shared.antrean
 
 import id.titipo.shared.config.KonfigurasiBisnis
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToOne
 import id.titipo.shared.db.Antrean as BarisAntrean
 import id.titipo.shared.db.TitipoDb
 import id.titipo.shared.util.Jam
 import id.titipo.shared.util.Ulid
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlin.random.Random
 
 /** Aksi vendor yang boleh antre luring (AGENTS.md butir g). Checkout dan bayar wajib online. */
@@ -139,6 +143,9 @@ class AntreanRepository(
     fun semua(): List<AksiAntrean> = q.semuaAntrean().executeAsList().map { it.domain() }
 
     fun jumlahMenunggu(): Long = q.jumlahMenunggu().executeAsOne()
+
+    /** Jumlah aksi menunggu sebagai aliran, untuk badge antrean di bilah luring. */
+    val jumlahMenungguFlow: Flow<Long> get() = q.jumlahMenunggu().asFlow().mapToOne(Dispatchers.Default)
 
     fun jumlahGagal(): Long = q.jumlahGagal().executeAsOne()
 
