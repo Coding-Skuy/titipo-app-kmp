@@ -26,6 +26,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
+import io.ktor.http.contentLength
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
@@ -82,8 +83,9 @@ class TitipoApi(
             }
         }
 
-    suspend fun katalog(idVendor: String): HasilApi<Katalog> =
-        panggil { http.get("$dasar/katalog/$idVendor") { otorisasi() } }
+    /** [batasByte]: tarik ulang katalog maksimal 5 MB (AC TTP-KMP-003); lebih dari itu ditolak klien. */
+    suspend fun katalog(idVendor: String, batasByte: Long = 5L * 1024 * 1024): HasilApi<Katalog> =
+        panggil(batasByte) { http.get("$dasar/katalog/$idVendor") { otorisasi() } }
 
     suspend fun buatPesanan(kunci: String, pesanan: PesananBaru): HasilApi<PesananDibuat> =
         panggil {
@@ -144,7 +146,7 @@ class TitipoApi(
         token.token()?.let { header(HttpHeaders.Authorization, "Bearer $it") }
     }
 
-    private suspend inline fun <reified T> panggil(blok: () -> HttpResponse): HasilApi<T> {
+    private suspend inline fun <reified T> panggil(batasByte: Long? = null, blok: () -> HttpResponse): HasilApi<T> {
         val respons = try {
             blok()
         } catch (e: CancellationException) {
@@ -153,6 +155,10 @@ class TitipoApi(
             return HasilApi.GalatJaringan(e.message ?: e::class.simpleName ?: "jaringan")
         }
         val kode = respons.status.value
+        val ukuran = respons.contentLength()
+        if (batasByte != null && ukuran != null && ukuran > batasByte) {
+            return HasilApi.GalatHttp(413, GalatApi("RESPONS_TERLALU_BESAR", "respons $ukuran byte melebihi batas $batasByte byte"))
+        }
         return if (kode in 200..299) {
             try {
                 HasilApi.Sukses(respons.body<T>(), kode)
