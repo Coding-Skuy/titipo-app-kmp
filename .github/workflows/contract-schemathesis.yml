@@ -1,0 +1,37 @@
+name: Uji kontrak Schemathesis (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Alamat backend/mock yang diuji (harus terjangkau dari runner)
+        required: true
+        default: http://localhost:8080
+      max_examples:
+        description: Jumlah kasus per operasi
+        required: false
+        default: '25'
+
+permissions:
+  contents: read
+
+jobs:
+  schemathesis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install schemathesis
+      - name: Jalankan Schemathesis
+        env:
+          BASE_URL: ${{ inputs.base_url }}
+          MAX_EXAMPLES: ${{ inputs.max_examples }}
+          GH_TOKEN: ${{ secrets.BACKEND_READ_TOKEN }}
+        run: ./contract/schemathesis.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: schemathesis-laporan
+          path: contract/out
