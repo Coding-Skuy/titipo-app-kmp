@@ -10,6 +10,7 @@ kotlinxDatetime = "0.6.2"
 ktor = "3.1.0"
 koin = "4.0.1"
 sqldelight = "2.0.2"
+coil = "3.3.0"
 junit = "4.13.2"
 
 [libraries]
@@ -32,6 +33,8 @@ sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", 
 sqldelight-driver-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-driver-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
 sqldelight-driver-sqlite = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 junit = { module = "junit:junit", version.ref = "junit" }
 
 [plugins]

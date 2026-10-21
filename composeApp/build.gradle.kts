@@ -29,13 +29,17 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.ktor.client.core)
             implementation(libs.sqldelight.runtime)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
         }
         androidMain.dependencies {
             implementation(libs.sqldelight.driver.android)
+            implementation(libs.ktor.client.okhttp)
             implementation("androidx.activity:activity-compose:1.9.3")
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.driver.native)
+            implementation(libs.ktor.client.darwin)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

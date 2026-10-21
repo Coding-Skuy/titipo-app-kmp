@@ -13,8 +13,15 @@ import id.titipo.shared.auth.LoginLumbungKtor
 import id.titipo.shared.auth.PengelolaSesi
 import id.titipo.shared.config.KonfigurasiBisnis
 import id.titipo.shared.db.TitipoDb
+import id.titipo.shared.rumah.SesiBelanja
 import org.koin.core.module.Module
 import org.koin.dsl.module
+
+/**
+ * ASUMSI: lokasi pengguna belum tersedia (modul expect/actual lokasi bukan bagian tiket 003).
+ * Titik bawaan = contoh openapi (Bandung) sampai lokasi platform diimplementasikan.
+ */
+data class LokasiBawaan(val lat: Double = -6.9175, val lng: Double = 107.6191)
 
 /** Alamat layanan; diisi platform dari konfigurasi build, bukan dikeraskan di UI. */
 data class KonfigEndpoint(val urlApi: String, val urlAuth: String)
@@ -32,5 +39,6 @@ fun modulApp(platform: Module): Module = module {
     single { AlurLogin(get(), get()) }
     single { TitipoDb(get<SqlDriver>()) }
     single { AntreanRepository(get(), konfigurasi = getOrNull<KonfigurasiBisnis>() ?: KonfigurasiBisnis.BAWAAN) }
+    single { SesiBelanja(get(), get(), getOrNull<KonfigurasiBisnis>() ?: KonfigurasiBisnis.BAWAAN) }
     single { PemrosesAntrean(get(), PengirimAksiKtor(get()), konfigurasi = getOrNull<KonfigurasiBisnis>() ?: KonfigurasiBisnis.BAWAAN) }
 }
