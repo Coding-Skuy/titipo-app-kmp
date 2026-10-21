@@ -40,3 +40,6 @@ Carthage/Build/
 
 # Compose resources generated
 composeApp/build/
+
+# Schemathesis
+contract/out/
