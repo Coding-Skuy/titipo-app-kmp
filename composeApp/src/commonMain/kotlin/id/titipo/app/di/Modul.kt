@@ -14,6 +14,8 @@ import id.titipo.shared.auth.PengelolaSesi
 import id.titipo.shared.config.KonfigurasiBisnis
 import id.titipo.shared.db.TitipoDb
 import id.titipo.shared.rumah.SesiBelanja
+import id.titipo.shared.vendor.PemantauKoneksi
+import id.titipo.shared.vendor.RepositoriVendor
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -40,5 +42,10 @@ fun modulApp(platform: Module): Module = module {
     single { TitipoDb(get<SqlDriver>()) }
     single { AntreanRepository(get(), konfigurasi = getOrNull<KonfigurasiBisnis>() ?: KonfigurasiBisnis.BAWAAN) }
     single { SesiBelanja(get(), get(), getOrNull<KonfigurasiBisnis>() ?: KonfigurasiBisnis.BAWAAN) }
+    single { RepositoriVendor(get(), get()) }
     single { PemrosesAntrean(get(), PengirimAksiKtor(get()), konfigurasi = getOrNull<KonfigurasiBisnis>() ?: KonfigurasiBisnis.BAWAAN) }
+    single {
+        val pemroses = get<PemrosesAntrean>()
+        PemantauKoneksi(get(), get<KonfigEndpoint>().urlApi, padaOnline = { pemroses.prosesSemua(tungguRetry = false) })
+    }
 }
