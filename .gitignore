@@ -40,3 +40,9 @@ Carthage/Build/
 
 # Compose resources generated
 composeApp/build/
+
+# Graphify (graf lokal, dibangun ulang dengan `graphify update .`)
+graphify-out/
+
+# Gradle wrapper wajib dilacak
+!gradle/wrapper/gradle-wrapper.jar
