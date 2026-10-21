@@ -14,4 +14,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "titipo-app-kmp"
+include(":shared")
 include(":composeApp")
