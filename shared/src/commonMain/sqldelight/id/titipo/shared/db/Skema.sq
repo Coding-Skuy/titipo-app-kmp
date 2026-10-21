@@ -1,0 +1,134 @@
+-- 4 tabel cermin lokal TitipO (AGENTS.md: pesanan, item pesanan, antrean, foto serah).
+-- Kolom `sinkron` 0/1: 0 = belum/pending ke server, 1 = sudah sinkron.
+-- Sumber kebenaran tetap DB titipo di server; ini hanya cermin + antrean.
+
+CREATE TABLE pesanan (
+    id TEXT NOT NULL PRIMARY KEY,
+    kode TEXT,
+    id_vendor TEXT NOT NULL,
+    status TEXT NOT NULL,
+    total_item INTEGER NOT NULL,
+    ongkir INTEGER NOT NULL,
+    total_bayar INTEGER NOT NULL,
+    kedaluwarsa_bayar TEXT,
+    dibuat_ms INTEGER NOT NULL,
+    sinkron INTEGER NOT NULL DEFAULT 0 CHECK (sinkron IN (0, 1))
+);
+
+CREATE INDEX pesanan_kode ON pesanan(kode);
+
+CREATE TABLE item_pesanan (
+    id_pesanan TEXT NOT NULL REFERENCES pesanan(id) ON DELETE CASCADE,
+    sku_lumbung TEXT NOT NULL,
+    nama TEXT NOT NULL,
+    harga_per_kg INTEGER NOT NULL,
+    jumlah_gram INTEGER NOT NULL,
+    sinkron INTEGER NOT NULL DEFAULT 0 CHECK (sinkron IN (0, 1)),
+    PRIMARY KEY (id_pesanan, sku_lumbung)
+);
+
+CREATE TABLE antrean (
+    id TEXT NOT NULL PRIMARY KEY,            -- ULID 26 karakter = Idempotency-Key
+    jenis TEXT NOT NULL,                     -- konfirmasi | tolak | tutup_jadwal | foto_serah
+    kode_pesanan TEXT,
+    muatan_json TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'menunggu', -- menunggu | selesai | gagal
+    percobaan INTEGER NOT NULL DEFAULT 0,
+    dibuat_ms INTEGER NOT NULL,
+    percobaan_terakhir_ms INTEGER,
+    galat TEXT,
+    sinkron INTEGER NOT NULL DEFAULT 0 CHECK (sinkron IN (0, 1))
+);
+
+CREATE INDEX antrean_status_dibuat ON antrean(status, dibuat_ms);
+
+CREATE TABLE foto_serah (
+    id TEXT NOT NULL PRIMARY KEY,            -- ULID
+    kode_pesanan TEXT NOT NULL,
+    path TEXT NOT NULL,
+    ukuran_byte INTEGER NOT NULL,
+    waktu_ms INTEGER NOT NULL,
+    id_antrean TEXT NOT NULL REFERENCES antrean(id) ON DELETE CASCADE,
+    diarsipkan INTEGER NOT NULL DEFAULT 0 CHECK (diarsipkan IN (0, 1)),
+    sinkron INTEGER NOT NULL DEFAULT 0 CHECK (sinkron IN (0, 1))
+);
+
+CREATE INDEX foto_serah_kode ON foto_serah(kode_pesanan);
+
+-- pesanan
+simpanPesanan:
+INSERT OR REPLACE INTO pesanan(id, kode, id_vendor, status, total_item, ongkir, total_bayar, kedaluwarsa_bayar, dibuat_ms, sinkron)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+simpanItem:
+INSERT OR REPLACE INTO item_pesanan(id_pesanan, sku_lumbung, nama, harga_per_kg, jumlah_gram, sinkron)
+VALUES (?, ?, ?, ?, ?, ?);
+
+pesananByKode:
+SELECT * FROM pesanan WHERE kode = ?;
+
+semuaPesanan:
+SELECT * FROM pesanan ORDER BY dibuat_ms DESC;
+
+itemByPesanan:
+SELECT * FROM item_pesanan WHERE id_pesanan = ? ORDER BY sku_lumbung;
+
+ubahStatusPesanan:
+UPDATE pesanan SET status = ? WHERE kode = ?;
+
+-- antrean
+sisipkanAntrean:
+INSERT INTO antrean(id, jenis, kode_pesanan, muatan_json, status, dibuat_ms, sinkron)
+VALUES (?, ?, ?, ?, 'menunggu', ?, 0);
+
+antreanBerikutnya:
+SELECT * FROM antrean WHERE status = 'menunggu' ORDER BY dibuat_ms ASC, rowid ASC LIMIT 1;
+
+antreanById:
+SELECT * FROM antrean WHERE id = ?;
+
+semuaAntrean:
+SELECT * FROM antrean ORDER BY dibuat_ms ASC, rowid ASC;
+
+jumlahMenunggu:
+SELECT COUNT(*) FROM antrean WHERE status = 'menunggu';
+
+jumlahGagal:
+SELECT COUNT(*) FROM antrean WHERE status = 'gagal';
+
+jumlahAksiSejak:
+SELECT COUNT(*) FROM antrean WHERE dibuat_ms >= ?;
+
+jumlahJenisSejak:
+SELECT COUNT(*) FROM antrean WHERE jenis = ? AND dibuat_ms >= ?;
+
+jumlahFotoBelumSelesai:
+SELECT COUNT(*) FROM antrean WHERE jenis = 'foto_serah' AND status != 'selesai';
+
+catatPercobaan:
+UPDATE antrean SET percobaan = percobaan + 1, percobaan_terakhir_ms = ?, galat = ? WHERE id = ?;
+
+tandaiSelesai:
+UPDATE antrean SET status = 'selesai', sinkron = 1, galat = NULL WHERE id = ?;
+
+tandaiGagal:
+UPDATE antrean SET status = 'gagal', galat = ? WHERE id = ?;
+
+kirimUlangManual:
+UPDATE antrean SET status = 'menunggu', percobaan = 0, dibuat_ms = ?, galat = NULL WHERE id = ? AND status = 'gagal';
+
+-- foto serah
+simpanFoto:
+INSERT INTO foto_serah(id, kode_pesanan, path, ukuran_byte, waktu_ms, id_antrean) VALUES (?, ?, ?, ?, ?, ?);
+
+arsipkanFotoLama:
+UPDATE foto_serah SET diarsipkan = 1 WHERE kode_pesanan = ? AND diarsipkan = 0;
+
+fotoAktif:
+SELECT * FROM foto_serah WHERE kode_pesanan = ? AND diarsipkan = 0 ORDER BY waktu_ms DESC LIMIT 1;
+
+fotoByAntrean:
+SELECT * FROM foto_serah WHERE id_antrean = ?;
+
+tandaiFotoSinkron:
+UPDATE foto_serah SET sinkron = 1 WHERE id_antrean = ?;
